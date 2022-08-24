@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+  <!-- <script src="./mini-vue/renderer.js"></script>
+  <script src="./mini-vue/reactive.js"></script>
+  <script src="./mini-vue/index.js"></script> -->
+  <script type="module">
+    import {createApp} from "./mini-vue/index.js"
+    import {reactive} from './mini-vue/reactive.js';
+    import {h, mount} from './mini-vue/renderer.js'
+    
+    // 1.创建根组件
+    const App = {
+      data: reactive({
+        counter: 0
+      }),
+      render() {
+        return h("div", null, [
+          h("h2", null, `当前计数: ${this.data.counter}`),
+          h("button", {
+            onClick: () => {
+                // debugger
+              this.data.counter++
+            //   debugger
+              console.log(this.data.counter);
+            }
+          }, "+1")
+        ])
+      }
+    }
+
+    // 2.挂载根组件
+    const app = createApp(App);
+    app.mount("#app");
+  </script>
+</body>
+</html>
