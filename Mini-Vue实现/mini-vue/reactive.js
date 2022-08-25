@@ -1,63 +1,62 @@
-class  Depend {
-    constructor() {
-        this.subscribers = new Set()
+let activeReactiveFn = null;
+class Depend {
+  constructor() {
+    this.reactiveFns = new Set();
+  }
+  //往依赖数据中添加响应式函数
+  depend() {
+    if (activeReactiveFn) {
+      this.reactiveFns.add(activeReactiveFn);
     }
-
-    depend() {
-        if (activeEffect) {
-            this.subscribers.add(activeEffect)
-        }
-    }
-
-    notify() {
-        this.subscribers.forEach(effect => {
-            effect()
-        })
-    }
+  }
+  //执行依赖响应函数
+  notify() {
+    this.reactiveFns.forEach((fn) => {
+      fn();
+    });
+  }
 }
-
-let activeEffect = null
-function watchEffect(effect) {
-    activeEffect = effect
-    effect()   
-    activeEffect = null
+//设置响应函数
+function watchFn(fn) {
+  activeReactiveFn = fn;
+  fn();
+  activeReactiveFn - null;
 }
-
-//Map({key, value}): key是一个字符串
-//WeakMap({key, value}): key是一个对象，弱引用
-const targetMap = new WeakMap()
-function getDep(target, key) {
-    //1.根据对象(target)取出对应的Map对象
-    let depsMap = targetMap.get(target)
-    if (!depsMap) {
-        depsMap = new Map()
-        targetMap.set(target, depsMap)
-    }
-    //2.取出具体的dep对象
-    let dep = depsMap.get(key)
-    if (!dep) {
-        dep = new Depend()
-        depsMap.set(key, dep)
-    }
-    return dep
+//设置获取依赖项对象的函数
+const targetMap = new WeakMap();
+function getDepend(target, key) {
+  //根据target获取map的过程
+  let map = targetMap.get(target);
+  if (!map) {
+    map = new Map();
+    targetMap.set(target, map);
+  }
+  //根据key获取依赖项depend
+  let depend = map.get(key);
+  if (!depend) {
+    depend = new Depend();
+    map.set(key, depend);
+  }
+  return depend;
 }
-
-//vue3对raw进行数据劫持
-function reactive(raw) {
-    return new Proxy(raw, {
-        get(target, key) {
-            const dep = getDep(target, key)
-            dep.depend()
-            return target[key]
-        },
-        set(target, key, newValue) {
-            const dep = getDep(target, key)
-            target[key] = newValue
-            dep.notify()
-            //当报Uncaught TypeError: 'set' on proxy: trap returned falsish for property 'xx'错误时，set返回true即可解决
-            return true
-        }
-    })
+//设置响应式函数
+function reactive(obj) {
+  //自动收集响应项， 进行数据劫持
+  return new Proxy(obj, {
+    get: function (target, key, receiver) {
+      //根据target.key获取对应的depend
+      const depend = getDepend(target, key);
+      //给depend对象添加响应式函数
+      depend.depend();
+      return Reflect.get(target, key, receiver);
+    },
+    set: function (target, key, newValue, receiver) {
+      Reflect.set(target, key, newValue, receiver);
+      //获取依赖项
+      const depend = getDepend(target, key);
+      depend.notify();
+      return true
+    },
+  });
 }
-
-export {watchEffect, reactive}
+ export {watchFn, reactive}

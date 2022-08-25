@@ -1,14 +1,14 @@
-import {watchEffect} from './reactive.js';
+import {watchFn} from './reactive.js';
 import {mount, patch} from './renderer.js';
 
-function createApp(rootComponent) {
+function createApp (rootComponent) {
     return {
-        mount(selector) {
-            const container = document.querySelector(selector);
-            let isMounted = false;
+        mount (selector) {
+            const container = document.querySelector(selector)
+            let isMounted = false
             let oldVNode = null
 
-            watchEffect(function() {
+            watchFn(() => {
                 if (!isMounted) {
                     oldVNode = rootComponent.render()
                     mount(oldVNode, container)
